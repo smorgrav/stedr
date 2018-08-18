@@ -1,0 +1,4 @@
+venv/
+.idea/
+Stedr.egg-info/
+*.pyc

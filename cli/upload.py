@@ -2,6 +2,9 @@ import base64
 import subprocess
 import re
 import json
+from io import open
+from pathlib import Path
+
 import requests
 import click
 import options
@@ -10,35 +13,64 @@ from os import listdir
 from os.path import isfile, isdir, join
 
 
-def image_upload(stedr, path, replace, dedup, opts: options.Options):
+def image_upload(stedr, path, replace, dedup, opts: options.Options, progress):
     # Start populating request data
     data = {'replace': replace}
-    click.echo('opts %s' % opts.apikey)
 
     # Get all files to upload
     if isdir(path):
-        click.echo('Uploading images from %s' % path)
+        if opts.verbose > 1:
+            click.echo('Uploading images from %s' % path)
         onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
         with click.progressbar(onlyfiles, label='Uploading images') as allfiles:
             for f in allfiles:
-                fullfile = join(path, f)
-                populate_from_exif(fullfile, data)
-                populate_64base(fullfile, data)
+                if not progress_already_contains_file(progress, f):
+                    fullfile = join(path, f)
+                    populate_from_exif(fullfile, data)
+                    populate_64base(fullfile, data)
+                    post_request(stedr, data, opts)
+                    update_progress_file(progress, f)
     else:
-        click.echo('Uploading image %s' % path)
-        populate_from_exif(path, data)
-        populate_64base(path, data)
+        if opts.verbose > 1:
+            click.echo('Uploading image %s' % path)
+        if not progress_already_contains_file(progress, f):
+            populate_from_exif(path, data)
+            populate_64base(path, data)
+            post_request(stedr, data, opts)
+            update_progress_file(progress, f)
 
+def progress_already_contains_file(progress_file, file):
+    if progress_file is None:
+        return False
 
+    if not isfile(progress_file):
+        Path(progress_file).touch()
+
+    file_content = open(progress_file, 'r+').read()
+    if file in file_content:
+        return True
+
+    return False
+
+def update_progress_file(progress_file, file):
+    if progress_file is None:
+        return False
+
+    with open(progress_file, 'a+') as out:
+        out.write(file + '\n', )
+
+def post_request(stedr, data, opts: options.Options):
     # Construct URL
     payload = json.dumps(data)
     url = f'http://{opts.endpoint}/api/snap/{stedr}'
-    headers = {'Authentication': f'key {apikey}, uid {uid}'}
+    headers = {'Authentication': f'key {opts.apikey}, uid {opts.uid}'}
 
     if opts.verbose > 1:
         click.echo(f'Url: {url}')
-        payload_copy = payload.copy()
-        payload_copy['image'] = 'removed'
+        click.echo(f'Header: {headers}')
+        data_copy = data.copy()
+        data_copy['image'] = 'removed'
+        payload_copy = json.dumps(data_copy)
         click.echo(f'Payload {payload_copy}')
 
     if opts.dryrun:
@@ -51,7 +83,6 @@ def image_upload(stedr, path, replace, dedup, opts: options.Options):
 
     if opts.verbose > 0:
         print(response)
-
 
 def populate_64base(fullfile, data):
     with open(fullfile, "rb") as f:

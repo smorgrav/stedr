@@ -6,7 +6,7 @@ from upload import image_upload
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 # Global attributes
-opts = options.Options
+opts = options.Options()
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -24,7 +24,7 @@ def cli(verbose, dryrun, endpoint, apikey, uid):
         opts.verbose = verbose
     if dryrun:
         click.echo('Dryrun mode!')
-        opts.verbose = dryrun
+        opts.dryrun = dryrun
     if endpoint:
         click.echo('Overriding endpoint: %s' % endpoint)
         opts.endpoint = endpoint
@@ -40,17 +40,10 @@ def cli(verbose, dryrun, endpoint, apikey, uid):
 @click.argument('path', type=click.Path(exists=True))
 @click.option('--dedup/--no-dedup', default=True, help="Ignore upload if previous image was identical")
 @click.option('--replace/--no-replace', default=False, help="Replace existing image if same timestamp")
-def upload(path, dedup, replace):
-    click.echo('Uploading %s' % path)
-    image_upload('mycamera', path, replace, dedup, opts)
-
-
-@cli.command()
-@click.argument('path', type=click.Path(exists=True))
-def test(path):
-    click.echo('Verbose mode is %s' % opts.verbose)
-    click.echo('test %s' % opts.dryrun)
-    click.echo('Path: %s' % path)
+@click.option('--stedr', required=True, help="The id of the stedr")
+@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False), help="Progress file to support graceful retries")
+def upload(path, stedr, dedup, replace, progress):
+    image_upload(stedr, path, replace, dedup, opts, progress)
 
 
 @cli.group()
@@ -60,11 +53,7 @@ def config():
 
 @config.command('list')
 def list_cmd():
-    click.echo('Current config:')
-    click.echo('Verbose mode is %s' % opts.verbose)
-    click.echo('Endpoint %s' % opts.endpoint)
-    click.echo('Uid %s' % opts.uid)
-    click.echo('Apikey %s' % opts.apikey)
+    click.echo(opts.to_string())
 
 
 @config.command('set')
@@ -72,7 +61,8 @@ def list_cmd():
 @click.option('--apikey', required=True, help="The uuid you see under settings")
 @click.option('--endpoint', default="playchat-e1a51.appspot.com", help="The hostname without https or path")
 def set_cmd(uid, apikey, endpoint):
-    click.echo('hei %s' % uid)
-    click.echo('hei %s' % apikey)
-    click.echo('hei %s' % endpoint)
+    opts.set('uid', uid)
+    opts.set('apikey', apikey)
+    opts.set('endpoint', endpoint)
+    click.echo('Settings are now: %s' % opts.to_string())
 

@@ -1,7 +1,8 @@
 # Stedr
 
 1. Public doc
-2. Public cli
+2. Public cli - download/install and usage instructions
+3. Public rest api documentation
 3. Tutorials
-3.1 Setup webcamera
-3.2 Upload images
+* Setup webcamera
+* Upload images

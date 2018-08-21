@@ -33,11 +33,12 @@ def image_upload(stedr, path, replace, dedup, opts: options.Options, progress):
     else:
         if opts.verbose > 1:
             click.echo('Uploading image %s' % path)
-        if not progress_already_contains_file(progress, f):
+        if not progress_already_contains_file(progress, path):
             populate_from_exif(path, data)
             populate_64base(path, data)
             post_request(stedr, data, opts)
-            update_progress_file(progress, f)
+            update_progress_file(progress, path)
+
 
 def progress_already_contains_file(progress_file, file):
     if progress_file is None:
@@ -82,7 +83,8 @@ def post_request(stedr, data, opts: options.Options):
         data=payload)
 
     if opts.verbose > 0:
-        print(response)
+        click.echo(response.headers)
+        click.echo(response.content)
 
 def populate_64base(fullfile, data):
     with open(fullfile, "rb") as f:

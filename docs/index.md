@@ -8,10 +8,19 @@ Stedr lets you interact with it via web, app, command line and through a Rest AP
 
 The commmand line tool is called 'stedr' and helps you among other things bulk upload and download images.
 
+## Installation
 
 ```bash
 pip install -e 'git+git@github.com:smorgrav/stedr.git#egg=stedr&subdirectory=cli'
 ```
+
+Requires python 3.6 or newer. If you don't have that or want to isolate the installation you can 
+run it under a virtual environment. 
+
+```bash
+virtualenv -p python3.6 venv
+. venv/bin/activate
+````
 
 ## Usage
 ```

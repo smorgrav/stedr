@@ -1,11 +1,8 @@
-import base64
 import subprocess
 import re
-import json
+from common import post, encode
 from io import open
 from pathlib import Path
-
-import requests
 import click
 import options
 from datetime import datetime
@@ -13,9 +10,10 @@ from os import listdir
 from os.path import isfile, isdir, join
 
 
-def image_upload(stedr, path, replace, dedup, opts: options.Options, progress):
+def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, progress):
     # Start populating request data
-    data = {'replace': replace}
+    # TODO proper options for backfill and reprocess
+    data = {'reprocess': reprocess}
 
     # Get all files to upload
     if isdir(path):
@@ -27,16 +25,18 @@ def image_upload(stedr, path, replace, dedup, opts: options.Options, progress):
                 if not progress_already_contains_file(progress, f):
                     fullfile = join(path, f)
                     populate_from_exif(fullfile, data)
-                    populate_64base(fullfile, data)
-                    post_request(stedr, data, opts)
+                    adjustdate(data, date)
+                    data['image'] = encode(fullfile)
+                    post(f'snap/{stedr}', data, opts)
                     update_progress_file(progress, f)
     else:
         if opts.verbose > 1:
             click.echo('Uploading image %s' % path)
         if not progress_already_contains_file(progress, path):
             populate_from_exif(path, data)
-            populate_64base(path, data)
-            post_request(stedr, data, opts)
+            adjustdate(data, date)
+            data['image'] = encode(path)
+            post(f'snap/{stedr}', data, opts)
             update_progress_file(progress, path)
 
 
@@ -60,36 +60,11 @@ def update_progress_file(progress_file, file):
     with open(progress_file, 'a+') as out:
         out.write(file + '\n', )
 
-def post_request(stedr, data, opts: options.Options):
-    # Construct URL
-    payload = json.dumps(data)
-    url = f'http://{opts.endpoint}/api/snap/{stedr}'
-    headers = {'Authentication': f'key {opts.apikey}, uid {opts.uid}'}
-
-    if opts.verbose > 1:
-        click.echo(f'Url: {url}')
-        click.echo(f'Header: {headers}')
-        data_copy = data.copy()
-        data_copy['image'] = 'removed'
-        payload_copy = json.dumps(data_copy)
-        click.echo(f'Payload {payload_copy}')
-
-    if opts.dryrun:
-        return
-
-    response = requests.post(
-        url,
-        headers=headers,
-        data=payload)
-
-    if opts.verbose > 0:
-        click.echo(response.headers)
-        click.echo(response.content)
-
-def populate_64base(fullfile, data):
-    with open(fullfile, "rb") as f:
-        data['image'] = base64.b64encode(f.read()).decode('ascii')
-
+def adjustdate(data, dateoption):
+    if dateoption == 'now':
+        data['date'] = int(datetime.now().strftime('%s'))
+    elif dateoption != 'exif':
+        data['date'] = int(datetime.strptime(dateoption).strftime('%s'))
 
 def populate_from_exif(fullfile, data):
     metadata = subprocess.check_output(['identify', '-verbose', fullfile])

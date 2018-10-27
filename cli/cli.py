@@ -1,6 +1,6 @@
 import click
 import options
-from snap import image_upload
+from snap import image_upload, image_download
 from stedr import set_watermark, run_cron
 from timelapse import remakemonth, remakeyear, remakeimage
 from common import post
@@ -59,8 +59,11 @@ def snap_upload(path, stedr, reprocess, backfill, date, progress):
 
 
 @snap.command('download')
-def snap_download():
-    click.echo('download')
+@click.option('--stedr', required=True, help="The id of the stedr")
+@click.option('--id', required=True, help="The id of the image")
+@click.option('--file', type=click.Path(exists=False), required=True, help="Where to save the file")
+def snap_download(stedr, id, file):
+    image_download(stedr, id, file, opts)
 
 
 #
@@ -143,7 +146,7 @@ def dataflow():
 
 @dataflow.command('wordcount')
 def wordcount():
-    post('dataflow/wordcount', {}, opts)
+    post('dataflow/wordcount', None, {}, opts)
 
 
 @cli.group('cron')

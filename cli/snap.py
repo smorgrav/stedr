@@ -10,6 +10,9 @@ from os import listdir
 from os.path import isfile, isdir, join
 
 
+def image_download(stedr, id, targetPath, opts):
+
+
 def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, progress):
     # Start populating request data
     # TODO proper options for backfill and reprocess
@@ -27,7 +30,7 @@ def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, 
                     populate_from_exif(fullfile, data)
                     adjustdate(data, date)
                     data['image'] = encode(fullfile)
-                    post(f'snap/{stedr}', data, opts)
+                    post(f'snap/{stedr}', None, data, opts)
                     update_progress_file(progress, f)
     else:
         if opts.verbose > 1:
@@ -36,7 +39,7 @@ def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, 
             populate_from_exif(path, data)
             adjustdate(data, date)
             data['image'] = encode(path)
-            post(f'snap/{stedr}', data, opts)
+            post(f'snap/{stedr}', None, data, opts)
             update_progress_file(progress, path)
 
 
@@ -53,6 +56,7 @@ def progress_already_contains_file(progress_file, file):
 
     return False
 
+
 def update_progress_file(progress_file, file):
     if progress_file is None:
         return False
@@ -60,11 +64,13 @@ def update_progress_file(progress_file, file):
     with open(progress_file, 'a+') as out:
         out.write(file + '\n', )
 
+
 def adjustdate(data, dateoption):
     if dateoption == 'now':
         data['date'] = int(datetime.now().strftime('%s'))
     elif dateoption != 'exif':
         data['date'] = int(datetime.strptime(dateoption).strftime('%s'))
+
 
 def populate_from_exif(fullfile, data):
     metadata = subprocess.check_output(['identify', '-verbose', fullfile])

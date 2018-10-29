@@ -4,9 +4,10 @@ import click
 import requests
 import options
 from io import open
+import os
 
 
-def get(restpath, params, opts: options.Options):
+def get(restpath, target_file, params, opts: options.Options):
     url = f'http://{opts.endpoint}/api/{restpath}'
     headers = {'Authentication': f'key {opts.apikey}, uid {opts.uid}'}
 
@@ -20,10 +21,14 @@ def get(restpath, params, opts: options.Options):
     if opts.verbose > 0:
         click.echo(response.headers)
 
+    if target_file:
+        with open(target_file, 'wb') as fd:
+            fd.write(response.content)
+
     click.echo(response.content)
 
 
-def getFile(restpath, params, save_file_path, opts: options.Options):
+def get_file(restpath, params, save_file_path, opts: options.Options):
     url = f'http://{opts.endpoint}/api/{restpath}'
     headers = {'Authentication': f'key {opts.apikey}, uid {opts.uid}'}
 
@@ -33,9 +38,21 @@ def getFile(restpath, params, save_file_path, opts: options.Options):
         click.echo(f'Params: {params}')
 
     response = requests.get(url, headers=headers, params=params)
+    payload = response.json()
 
-    with open(save_file_path, 'wb') as fd:
-        fd.write(response.content)
+    if not payload.filename:
+        click.echo("Did not get filename from Stedr - unable to download")
+        return
+
+    if opts.verbose > 0:
+        click.echo(f'Saving {payload.filename}')
+
+    full_path = os.path.join(save_file_path, payload.filename)
+    directory = os.path.dirname(full_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    with open(full_path, 'wb') as fd:
+        fd.write(base64.b64decode(payload.image))
 
 
 def post(restpath, params, data, opts: options.Options):

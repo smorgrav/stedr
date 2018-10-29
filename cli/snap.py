@@ -1,6 +1,6 @@
 import subprocess
 import re
-from common import post, encode
+from common import post, encode, get_file, get
 from io import open
 from pathlib import Path
 import click
@@ -10,10 +10,29 @@ from os import listdir
 from os.path import isfile, isdir, join
 
 
-def image_download(stedr, id, targetPath, opts):
+def image_list(stedr, imagelist, opts):
+    get(f'snap/{stedr}/list', imagelist, None, opts)
 
 
-def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, progress):
+def image_download(stedr, imageid, progress, imagelist, savedir, opts: options.Options):
+
+    if imageid is not None:
+        get_file(f'snap/{stedr}/{imageid}/image', None, savedir, opts)
+    else:
+        if imagelist is None:
+            click.echo("You must specify either imageid or imagelist")
+            return False
+        if not isfile(imagelist):
+            click.echo("imagelist must be a regular file with ids separated by newline")
+        with open(imagelist) as f:
+            with click.progressbar(f, label='Uploading images') as allIds:
+                for imgid in allIds:
+                    if not progress_already_contains_item(progress, imgid):
+                        get_file(f'snap/{stedr}/{imgid}/image', None, savedir, opts)
+                        update_progress_file(progress, imgid)
+
+
+def image_upload(stedr, path, reprocess, backfill, date, progress, opts: options.Options):
     # Start populating request data
     # TODO proper options for backfill and reprocess
     data = {'reprocess': reprocess}
@@ -25,7 +44,7 @@ def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, 
         onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
         with click.progressbar(onlyfiles, label='Uploading images') as allfiles:
             for f in allfiles:
-                if not progress_already_contains_file(progress, f):
+                if not progress_already_contains_item(progress, f):
                     fullfile = join(path, f)
                     populate_from_exif(fullfile, data)
                     adjustdate(data, date)
@@ -35,7 +54,7 @@ def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, 
     else:
         if opts.verbose > 1:
             click.echo('Uploading image %s' % path)
-        if not progress_already_contains_file(progress, path):
+        if not progress_already_contains_item(progress, path):
             populate_from_exif(path, data)
             adjustdate(data, date)
             data['image'] = encode(path)
@@ -43,7 +62,7 @@ def image_upload(stedr, path, reprocess, backfill, opts: options.Options, date, 
             update_progress_file(progress, path)
 
 
-def progress_already_contains_file(progress_file, file):
+def progress_already_contains_item(progress_file, file):
     if progress_file is None:
         return False
 

@@ -1,9 +1,9 @@
 import click
 import options
-from snap import image_upload, image_download
+from snap import image_upload, image_download, image_list
 from stedr import set_watermark, run_cron
 from timelapse import remakemonth, remakeyear, remakeimage
-from common import post
+from common import post, get
 
 # To enable -h abbrivation of help option
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -55,15 +55,24 @@ def snap():
 @click.option('--date', required=False, default="exif", help="exif, now or explicit. Defaults to exif")
 @click.option('--progress', type=click.Path(file_okay=True, dir_okay=False), help="Progress file to support graceful retries")
 def snap_upload(path, stedr, reprocess, backfill, date, progress):
-    image_upload(stedr, path, reprocess, backfill, opts, date, progress)
+    image_upload(stedr, path, reprocess, backfill, date, progress, opts)
 
 
 @snap.command('download')
+@click.argument('savedir', type=click.Path(file_okay=False))
 @click.option('--stedr', required=True, help="The id of the stedr")
-@click.option('--id', required=True, help="The id of the image")
-@click.option('--file', type=click.Path(exists=False), required=True, help="Where to save the file")
-def snap_download(stedr, id, file):
-    image_download(stedr, id, file, opts)
+@click.option('--imageid', required=False, help="The id of the image")
+@click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False, help="A list of image ids")
+@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False), help="Progress file to support graceful retries for the list")
+def snap_download(stedr, imageid, progress, imagelist, savedir):
+    image_download(stedr, imageid, progress, imagelist, savedir, opts)
+
+
+@snap.command('list')
+@click.option('--stedr', required=True, help="The id of the stedr")
+@click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False, help="Save the list to this file")
+def snap_list(stedr, imagelist):
+    image_list(stedr, imagelist, opts)
 
 
 #
@@ -159,3 +168,8 @@ def cron():
 @click.option('--count', required=False, default=1, help="Number of files to import from url")
 def cron_source(stedr, count):
     run_cron(stedr, count, opts)
+
+
+@cron.command('teapot')
+def teapot():
+    get('teapot', None, None, opts)

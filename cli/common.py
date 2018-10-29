@@ -40,19 +40,20 @@ def get_file(restpath, params, save_file_path, opts: options.Options):
     response = requests.get(url, headers=headers, params=params)
     payload = response.json()
 
-    if not payload.filename:
+    filename = payload['filename']
+    if not filename:
         click.echo("Did not get filename from Stedr - unable to download")
         return
 
     if opts.verbose > 0:
-        click.echo(f'Saving {payload.filename}')
+        click.echo(f'Saving {filename}')
 
-    full_path = os.path.join(save_file_path, payload.filename)
+    full_path = os.path.join(save_file_path, filename)
     directory = os.path.dirname(full_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
     with open(full_path, 'wb') as fd:
-        fd.write(base64.b64decode(payload.image))
+        fd.write(base64.b64decode(payload['image']))
 
 
 def post(restpath, params, data, opts: options.Options):

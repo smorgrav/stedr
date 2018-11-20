@@ -84,19 +84,29 @@ def config():
 
 
 @config.command('list')
-def list_cmd():
-    click.echo(opts.to_string())
+@click.option('--name', required=False, help="The config name to view")
+def list_cmd(name):
+    click.echo(opts.print_config(name=name))
+
+
+@config.command('use')
+@click.option('--name', required=True, help="The config set to use")
+def use_cmd(name):
+    opts.use(name)
+    opts.print_config()
 
 
 @config.command('set')
+@click.option('--name', required=False, help="The set if you want to set config for an alternative configuration set",
+              default=opts.get_current_section())
 @click.option('--uid', required=True, help="The user id - a long string of random characters")
 @click.option('--apikey', required=True, help="The uuid you see under settings")
 @click.option('--endpoint', default="playchat-e1a51.appspot.com", help="The hostname without https or path")
-def set_cmd(uid, apikey, endpoint):
-    opts.set('uid', uid)
-    opts.set('apikey', apikey)
-    opts.set('endpoint', endpoint)
-    click.echo('Settings are now: %s' % opts.to_string())
+def set_cmd(name, uid, apikey, endpoint):
+    opts.set_inner('uid', uid, name)
+    opts.set_inner('apikey', apikey, name)
+    opts.set_inner('endpoint', endpoint, name)
+    opts.print_config()
 
 
 #

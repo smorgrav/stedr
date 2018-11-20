@@ -59,7 +59,7 @@ Commands:
 For more help add '--help' after the command you need more info about.
 
 ## Getting started
-All commands agsint stedr needs authorization. This can be provided on the commandline for every command with the
+All commands agsint stedr needs authentication. This can be provided on the commandline for every command with the
 apikey and uid parameters, but it will soon feel quite annoying to specify these each time. The alternative is to 
 configure this once and for all using the config command. The apikey, userid and endpoint are found under 'Settings' in the web UI. 
 You might have to enable the API key and/or generate a new key as this is not provided by default. This is also done in the web UI.

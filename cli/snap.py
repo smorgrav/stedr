@@ -14,6 +14,13 @@ def image_list(stedr, imagelist, opts):
     get(f'snap/{stedr}/list', imagelist, None, opts)
 
 
+def image_upload_from_source(stedr, backfill, count, opts):
+    params = {"count": count}
+    if backfill:
+        params["backfill"] = ''
+    post(f'cron/{stedr}/source', params, {}, opts)
+
+
 def image_download(stedr, imageid, progress, imagelist, savedir, opts: options.Options):
 
     if imageid is not None:

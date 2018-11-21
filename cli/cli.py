@@ -1,6 +1,6 @@
 import click
 import options
-from snap import image_upload, image_download, image_list
+from snap import image_upload, image_download, image_list, image_upload_from_source
 from stedr import set_watermark, run_cron
 from timelapse import remakemonth, remakeyear, remakeimage
 from common import post, get
@@ -47,6 +47,19 @@ def snap():
     pass
 
 
+@snap.command('import')
+@click.option('--stedr', required=True, help="The id of the stedr")
+@click.option('--backfill/--no-backfill', default=False, help="Allow older images than already imported")
+@click.option('--count', required=False, default=1, help="Number of snaps to import")
+def snap_from_source(stedr, backfill, count):
+    """Import snaps from the source assosiated with the stedr.
+
+       This is an alternative to wait for the automatic import job or a way to
+       bulk import snaps when creating a new stedr.
+    """
+    image_upload_from_source(stedr, backfill, count, opts)
+
+
 @snap.command('upload')
 @click.argument('path', type=click.Path(exists=True))
 @click.option('--reprocess/--no-reprocess', default=False, help="Reprocess previous image was identical")
@@ -83,8 +96,8 @@ def config():
     pass
 
 
-@config.command('list')
-@click.option('--name', required=False, help="The config name to view")
+@config.command('show')
+@click.option('--name', required=False, help="Show config and list available config sets")
 def list_cmd(name):
     click.echo(opts.print_config(name=name))
 
@@ -124,11 +137,6 @@ def stedrgroup():
 @click.option('--mode', required=True,  type=click.Choice(['none', 'normal', 'exclusive']), help="The id of stedr")
 def stedr_set_watermark(stedr, file, pos, mode):
     set_watermark(stedr, file, pos, mode, opts)
-
-
-@stedrgroup.command('list')
-def stedr_list():
-    click.echo('list')
 
 
 @cli.group('timelapse')

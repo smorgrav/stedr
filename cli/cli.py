@@ -1,7 +1,7 @@
 import click
 import options
 from snap import image_upload, image_download, image_list, image_upload_from_source
-from stedr import set_watermark, run_cron
+from stedr import set_watermark, run_cron, add_integration
 from timelapse import remakemonth, remakeyear, remakeimage
 from common import post, get
 
@@ -139,6 +139,14 @@ def stedr_set_watermark(stedr, file, pos, mode):
     set_watermark(stedr, file, pos, mode, opts)
 
 
+@stedrgroup.command('add-integration')
+@click.option('--stedr', required=True, help="The id of stedr")
+@click.option('--name', required=True, help="Your name for the integration")
+@click.option('--type', required=True, type=click.Choice(['regops', 'email']), help="One of the supported integrations")
+def stedr_add_integration(stedr, name, type):
+    add_integration(stedr, name, type, opts)
+
+
 @cli.group('timelapse')
 def timelapse():
     pass
@@ -160,7 +168,7 @@ def remake_year(stedr, year):
 
 
 @timelapse.command('remake-image')
-@click.option('--stedr', required=True, help="The id of stedr")
+@click.option('--stedr', required=True, help="The id of stimageedr")
 @click.option('--year', required=True, help="E.g. 2018")
 def remake_image(stedr, year):
     remakeimage(stedr, year, opts)
@@ -171,7 +179,7 @@ def dataflow():
     pass
 
 
-@dataflow.command('wordcount')
+@dataflow.command('wordcount', help="Test function for dataflow")
 def wordcount():
     post('dataflow/wordcount', None, {}, opts)
 
@@ -188,6 +196,8 @@ def cron_source(stedr, count):
     run_cron(stedr, count, opts)
 
 
-@cron.command('teapot')
+@cron.command('teapot', help="The http variant of hello world - basically to check that the service is up")
 def teapot():
     get('teapot', None, None, opts)
+
+

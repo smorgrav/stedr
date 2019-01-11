@@ -201,3 +201,27 @@ def teapot():
     get('teapot', None, None, opts)
 
 
+@cli.group('ml')
+def ml():
+    pass
+
+
+@ml.command('new', help="Create a new model")
+@click.option('--name', required=True, help="The name of the new model")
+@click.option('--projectid', required=True, help="google cloud projectid where the model lives")
+@click.option('--model', required=True, help="mlengine model name")
+@click.option('--version', required=True, help="mlengine version")
+@click.option('--width', required=False, default=224, help="224 for vvg, resnet and more, 299 for inception")
+@click.option('--height', required=False, default=224, help="224 for vvg, resnet and more, 299 for inception")
+@click.option('--type', required=False, default=0, help="TODO really - the idea is to enumerate channel configuration")
+def new_model(name, projectid, model, version, width, height, type):
+    post('ml', None, {
+        'name': name,
+        'projectid': projectid,
+        'model': model,
+        'existingmodel': True,
+        'version': version,
+        'width': width,
+        'height': height,
+        'type': type
+    }, opts)

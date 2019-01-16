@@ -14,6 +14,10 @@ def image_list(stedr, imagelist, opts):
     get(f'snap/{stedr}/list', imagelist, None, opts)
 
 
+def image_predict(stedr, snap, opts):
+    post(f'/snap/{stedr}/{snap}/ml', None, None, opts);
+
+
 def image_upload_from_source(stedr, backfill, count, opts):
     params = {"count": count}
     if backfill:

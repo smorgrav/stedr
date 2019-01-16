@@ -1,6 +1,6 @@
 import click
 import options
-from snap import image_upload, image_download, image_list, image_upload_from_source
+from snap import image_upload, image_download, image_list, image_upload_from_source, image_predict
 from stedr import set_watermark, run_cron, add_integration
 from timelapse import remakemonth, remakeyear, remakeimage
 from common import post, get
@@ -87,6 +87,13 @@ def snap_download(stedr, imageid, progress, imagelist, savedir):
 def snap_list(stedr, imagelist):
     image_list(stedr, imagelist, opts)
 
+
+@snap.command('predict')
+@click.option('--stedr', required=True, help="The id of the stedr")
+@click.option('--snap', required=True, help="The id of the snap/image - typically a uuid")
+def snap_predict(stedr, snap):
+    """Get predictions from machine learning on this snap"""
+    image_predict(stedr, snap, opts)
 
 #
 # Config groups - set uid, key and endpoint for the cli

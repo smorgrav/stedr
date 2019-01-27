@@ -15,7 +15,7 @@ def image_list(stedr, imagelist, opts):
 
 
 def image_predict(stedr, snap, opts):
-    post(f'/snap/{stedr}/{snap}/ml', None, None, opts);
+    post(f'snap/{stedr}/{snap}/ml', None, None, opts);
 
 
 def image_upload_from_source(stedr, backfill, count, opts):

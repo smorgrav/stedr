@@ -149,7 +149,7 @@ def stedr_set_watermark(stedr, file, pos, mode):
 @stedrgroup.command('add-integration')
 @click.option('--stedr', required=True, help="The id of stedr")
 @click.option('--name', required=True, help="Your name for the integration")
-@click.option('--type', required=True, type=click.Choice(['regops', 'email']), help="One of the supported integrations")
+@click.option('--type', required=True, type=click.Choice(['regobs', 'email']), help="One of the supported integrations")
 def stedr_add_integration(stedr, name, type):
     add_integration(stedr, name, type, opts)
 

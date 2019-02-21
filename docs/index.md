@@ -9,9 +9,9 @@ This site will document usage of each of these tools, starting with the command 
 stedr == camera (for the most part)
 snap == An image with meta information (usually)
 
-In addition to being the name of the project, 'stedr' is the name of the location where we gather information from. This is
-usually a camera that takes images, but could be temperature sensors or heat detectors. A snap is a snapshot of the information
-gathered from one stedr - basically an image, but could also be a measurement of some sort.
+In addition to being the name of the service, 'stedr' is the name of the location where we gather information. This is
+usually a camera that takes images, but could be an arbitrary set of sensors. A snap is a snapshot of the information
+gathered from one stedr (which again - is usaully an image, but could all sorts of things).
 
 # CLI
 
@@ -20,10 +20,10 @@ The commmand line tool is called 'stedr' and helps you among other things to bul
 ## Installation
 
 ```bash
-pip install -e 'git+git@github.com:smorgrav/stedr.git#egg=stedr&subdirectory=cli'
+pip install -e 'git+https://github.com/smorgrav/stedr#egg=stedr&subdirectory=cli'
 ```
 
-Requires python 3.6 or newer. If you don't have that or want to isolate the installation you can 
+Requires python 3.6.5 or newer. If you don't have that or want to isolate the installation you can 
 run it under a virtual environment. 
 
 ```bash
@@ -56,12 +56,12 @@ Commands:
   timelapse
 ```
 
-For more help add '--help' after the command you need more info about.
+For more help add '--help or -h' after the command you need more info about.
 
 ## Getting started
 All commands agsint stedr needs authentication. This can be provided on the commandline for every command with the
 apikey and uid parameters, but it will soon feel quite annoying to specify these each time. The alternative is to 
-configure this once and for all using the config command. The apikey, userid and endpoint are found under 'Settings' in the web UI. 
+configure this once and for all, using the config command. The apikey, userid and endpoint are found under 'Settings' in the web UI. 
 You might have to enable the API key and/or generate a new key as this is not provided by default. This is also done in the web UI.
 
 ```

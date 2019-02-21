@@ -7,8 +7,8 @@ def set_watermark(stedr, f, pos, mode, opts: options.Options):
     post(f'stedr/{stedr}/watermark', None, data, opts)
 
 
-def run_cron(stedr, count, opts: options.Options):
-    post(f'cron/{stedr}/source', {"count": count}, {}, opts)
+def run_cron(stedr, count, backfill, opts: options.Options):
+    post(f'cron/{stedr}/source', {"count": count, "backfill": backfill}, {}, opts)
 
 
 def add_integration(stedr, name, type, opts: options.Options):

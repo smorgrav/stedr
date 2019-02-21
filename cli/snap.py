@@ -37,7 +37,7 @@ def image_download(stedr, imageid, progress, imagelist, savedir, opts: options.O
             click.echo("imagelist must be a regular file with ids separated by newline")
         with open(imagelist) as f:
             all_lines = f.readlines();
-            with click.progressbar(all_lines, label='Uploading images') as allIds:
+            with click.progressbar(all_lines, label='Downloading images') as allIds:
                 for imgid in allIds:
                     if not progress_already_contains_item(progress, imgid):
                         get_file(f'snap/{stedr}/{imgid.rstrip()}/image', None, savedir, opts)

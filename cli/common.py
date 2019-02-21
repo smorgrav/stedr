@@ -1,5 +1,7 @@
 import json
 import base64
+import sys
+
 import click
 import requests
 import options
@@ -83,7 +85,13 @@ def post(restpath, params, data, opts: options.Options):
 
     if opts.verbose > 0:
         click.echo(response.headers)
+
+    if opts.verbose > 0 or response.status_code > 299:
+        click.echo(response.status_code)
         click.echo(response.content)
+
+    if response.status_code > 299:
+        sys.exit(response.status_code / 100)  # TODO improve shell exit codes
 
 
 def encode(file):

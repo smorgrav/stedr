@@ -199,8 +199,9 @@ def cron():
 @cron.command('source')
 @click.option('--stedr', required=True, help="The id of stedr")
 @click.option('--count', required=False, default=1, help="Number of files to import from url")
-def cron_source(stedr, count):
-    run_cron(stedr, count, opts)
+@click.option('--backfill/--no-backfill', required=False, default=False, help="Allow import of older images")
+def cron_source(stedr, count, backfill):
+    run_cron(stedr, count, backfill, opts)
 
 
 @cron.command('teapot', help="The http variant of hello world - basically to check that the service is up")

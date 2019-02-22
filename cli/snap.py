@@ -26,22 +26,39 @@ def image_upload_from_source(stedr, backfill, count, opts):
 
 
 def image_download(stedr, imageid, progress, imagelist, savedir, opts: options.Options):
+    success = 0
+    failures = 0
 
     if imageid is not None:
-        get_file(f'snap/{stedr}/{imageid}/image', None, savedir, opts)
+        try:
+            get_file(f'snap/{stedr}/{imageid}/image', None, savedir, opts)
+        except:
+            click.echo("Unable to download file")
+
     else:
         if imagelist is None:
             click.echo("You must specify either imageid or imagelist")
             return False
         if not isfile(imagelist):
             click.echo("imagelist must be a regular file with ids separated by newline")
+        if not progress:
+            progress = imagelist + ".progress"
         with open(imagelist) as f:
             all_lines = f.readlines();
             with click.progressbar(all_lines, label='Downloading images') as allIds:
                 for imgid in allIds:
                     if not progress_already_contains_item(progress, imgid):
-                        get_file(f'snap/{stedr}/{imgid.rstrip()}/image', None, savedir, opts)
-                        update_progress_file(progress, imgid)
+                        try:
+                            get_file(f'snap/{stedr}/{imgid.rstrip()}/image', None, savedir, opts)
+                            update_progress_file(progress, imgid, True)
+                            success += 1
+                        except:
+                            update_progress_file(progress, imgid, False)
+                            failures += 1
+
+    click.echo(f'Successfully downloaded all {success} images')
+    if failures > 0:
+        click.echo(f'Failed downloaded {failures} images - see {progress} for details')
 
 
 def image_upload(stedr, path, reprocess, backfill, date, progress, opts: options.Options):
@@ -88,12 +105,12 @@ def progress_already_contains_item(progress_file, file):
     return False
 
 
-def update_progress_file(progress_file, file):
+def update_progress_file(progress_file, file, success):
     if progress_file is None:
         return False
 
     with open(progress_file, 'a+') as out:
-        out.write(file + '\n', )
+        out.write(str.strip(file) + '\t' + str(success) + '\n', )
 
 
 def adjustdate(data, dateoption):

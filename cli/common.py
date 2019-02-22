@@ -41,11 +41,10 @@ def get_file(restpath, params, save_file_path, opts: options.Options):
 
     response = requests.get(url, headers=headers, params=params)
     payload = response.json()
-
     filename = payload['filename']
+
     if not filename:
-        click.echo("Did not get filename from Stedr - unable to download")
-        return
+        raise KeyError("Did not get filename from Stedr - unable to download")
 
     if opts.verbose > 0:
         click.echo(f'Saving {filename}')

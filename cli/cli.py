@@ -72,7 +72,7 @@ def snap_upload(path, stedr, reprocess, backfill, date, progress):
 
 
 @snap.command('download')
-@click.argument('savedir', type=click.Path(file_okay=False))
+@click.argument('savedir', type=click.Path(file_okay=False), help="The directory to put the downloaded snaps")
 @click.option('--stedr', required=True, help="The id of the stedr")
 @click.option('--imageid', required=False, help="The id of the image")
 @click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False, help="A list of image ids")

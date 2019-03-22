@@ -72,11 +72,11 @@ def snap_upload(path, stedr, reprocess, backfill, date, progress):
 
 
 @snap.command('download')
-@click.argument('savedir', type=click.Path(file_okay=False), help="The directory to put the downloaded snaps")
-@click.option('--stedr', required=True, help="The id of the stedr")
-@click.option('--imageid', required=False, help="The id of the image")
-@click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False, help="A list of image ids")
-@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False), help="Progress file to support graceful retries for the list")
+@click.argument('savedir', type=click.Path(file_okay=False))
+@click.option('--stedr', required=True, help='The id of the stedr')
+@click.option('--imageid', required=False, help='The id of the image')
+@click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False)
+@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False))
 def snap_download(stedr, imageid, progress, imagelist, savedir):
     image_download(stedr, imageid, progress, imagelist, savedir, opts)
 
@@ -117,11 +117,11 @@ def use_cmd(name):
 
 
 @config.command('set')
-@click.option('--name', required=False, help="The set if you want to set config for an alternative configuration set",
+@click.option('--name', required=False, help='The set if you want to set config for an alternative configuration set',
               default=opts.get_current_section())
 @click.option('--uid', required=True, help="The user id - a long string of random characters")
 @click.option('--apikey', required=True, help="The uuid you see under settings")
-@click.option('--endpoint', default="playchat-e1a51.appspot.com", help="The hostname without https or path")
+@click.option('--endpoint', default="playchat-e1a51.appspot.com", help='The hostname without https or path')
 def set_cmd(name, uid, apikey, endpoint):
     opts.set_inner('uid', uid, name)
     opts.set_inner('apikey', apikey, name)
@@ -218,12 +218,12 @@ def ml():
 @click.option('--name', required=True, help="The name of the new model")
 @click.option('--projectid', required=True, help="google cloud projectid where the model lives")
 @click.option('--model', required=True, help="mlengine model name")
-@click.option('--version', required=True, help="mlengine version")
+@click.option('--version', required=True,  help="mlengine version")
 @click.option('--width', required=False, default=224, help="224 for vvg, resnet and more, 299 for inception")
 @click.option('--height', required=False, default=224, help="224 for vvg, resnet and more, 299 for inception")
 @click.option('--type', required=False, default=0, help="TODO really - the idea is to enumerate channel configuration")
 def new_model(name, projectid, model, version, width, height, type):
-    post('ml', None, {
+    post('ml/model', None, {
         'name': name,
         'projectid': projectid,
         'model': model,
@@ -233,3 +233,15 @@ def new_model(name, projectid, model, version, width, height, type):
         'height': height,
         'type': type
     }, opts)
+
+
+@ml.command('train', help="Train the model (again)")
+@click.option('--modelid', required=True, help="The model id")
+def new_model(modelid):
+    post(f'ml/model/{modelid}/train', None, None, opts)
+
+
+@ml.command('deploy', help="Deploy the trained model")
+@click.option('--modelid', required=True, help="The model id")
+def new_model(modelid):
+    post(f'ml/model/{modelid}/deploy', None, None, opts)

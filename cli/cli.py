@@ -66,7 +66,8 @@ def snap_from_source(stedr, backfill, count):
 @click.option('--backfill/--no-backfill', default=False, help="Allow older images than already imported")
 @click.option('--stedr', required=True, help="The id of the stedr")
 @click.option('--date', required=False, default="exif", help="exif, now or explicit. Defaults to exif")
-@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False), help="Progress file to support graceful retries")
+@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False),
+              help="Progress file to support graceful retries")
 def snap_upload(path, stedr, reprocess, backfill, date, progress):
     image_upload(stedr, path, reprocess, backfill, date, progress, opts)
 
@@ -83,7 +84,8 @@ def snap_download(stedr, imageid, progress, imagelist, savedir):
 
 @snap.command('list')
 @click.option('--stedr', required=True, help="The id of the stedr")
-@click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False, help="Save the list to this file")
+@click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False,
+              help="Save the list to this file")
 def snap_list(stedr, imagelist):
     image_list(stedr, imagelist, opts)
 
@@ -94,6 +96,7 @@ def snap_list(stedr, imagelist):
 def snap_predict(stedr, snap):
     """Get predictions from machine learning on this snap"""
     image_predict(stedr, snap, opts)
+
 
 #
 # Config groups - set uid, key and endpoint for the cli
@@ -141,7 +144,7 @@ def stedrgroup():
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
 @click.option('--stedr', required=True, help="The id of stedr")
 @click.option('--pos', required=True, nargs=2, type=float, help="E.g. 0,0.5")
-@click.option('--mode', required=True,  type=click.Choice(['none', 'normal', 'exclusive']), help="The id of stedr")
+@click.option('--mode', required=True, type=click.Choice(['none', 'normal', 'exclusive']), help="The id of stedr")
 def stedr_set_watermark(stedr, file, pos, mode):
     set_watermark(stedr, file, pos, mode, opts)
 
@@ -214,21 +217,14 @@ def ml():
     pass
 
 
-@ml.command('new', help="Create a new model")
+@ml.command('new', help="Create a new model ")
 @click.option('--name', required=True, help="The name of the new model")
-@click.option('--projectid', required=True, help="google cloud projectid where the model lives")
-@click.option('--model', required=True, help="mlengine model name")
-@click.option('--version', required=True,  help="mlengine version")
 @click.option('--width', required=False, default=224, help="224 for vvg, resnet and more, 299 for inception")
 @click.option('--height', required=False, default=224, help="224 for vvg, resnet and more, 299 for inception")
 @click.option('--type', required=False, default=0, help="TODO really - the idea is to enumerate channel configuration")
-def new_model(name, projectid, model, version, width, height, type):
+def new_model(name, width, height, type):
     post('ml/model', None, {
         'name': name,
-        'projectid': projectid,
-        'model': model,
-        'existingmodel': True,
-        'version': version,
         'width': width,
         'height': height,
         'type': type
@@ -237,11 +233,27 @@ def new_model(name, projectid, model, version, width, height, type):
 
 @ml.command('train', help="Train the model (again)")
 @click.option('--modelid', required=True, help="The model id")
-def new_model(modelid):
+def train_model(modelid):
     post(f'ml/model/{modelid}/train', None, None, opts)
 
 
-@ml.command('deploy', help="Deploy the trained model")
+@ml.command('deploy', help="Deploy a trained session - optionally a manually deployed session")
 @click.option('--modelid', required=True, help="The model id")
-def new_model(modelid):
+def deploy_model(modelid):
     post(f'ml/model/{modelid}/deploy', None, None, opts)
+
+
+@ml.command('manual', help="Deploy a trained session - optionally a manually deployed session")
+@click.option('--modelid', required=True, help="The model id")
+@click.option('--mlproject', required=False, help="mlengine project id for the manually deployed session")
+@click.option('--mlmodel', required=False, help="only nessesary if different from modelid")
+@click.option('--mlversion', required=False, help="mlengine version for the manually deplyed session")
+def manual_model(modelid, projectid, model, version):
+    post(f'ml/model/{modelid}/manual', {'projectid': projectid, 'model': model, 'version': version}, None, opts)
+
+
+@ml.command('export', help="Export supervised values with the serving url. Pandas csv format")
+@click.option('--file', required=False, type=click.Path(file_okay=False), help="File to save csv formatted output")
+@click.option('--modelid', required=True, help="The model id")
+def export_supervised(modelid, file):
+    get(f'ml/model/{modelid}/csv2', file, None, opts)

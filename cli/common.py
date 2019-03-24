@@ -26,8 +26,8 @@ def get(restpath, target_file, params, opts: options.Options):
     if target_file:
         with open(target_file, 'wb') as fd:
             fd.write(response.content)
-
-    click.echo(response.content)
+    else:
+        click.echo(response.content)
 
 
 def get_file(restpath, params, save_file_path, opts: options.Options):

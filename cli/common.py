@@ -67,11 +67,14 @@ def post(restpath, params, data, opts: options.Options):
         click.echo(f'Url: {url}')
         click.echo(f'Header: {headers}')
         click.echo(f'Params: {params}')
-        data_copy = data.copy()
-        if 'image' in data_copy:
-            data_copy['image'] = 'removed'
-        payload_copy = json.dumps(data_copy)
-        click.echo(f'Payload {payload_copy}')
+        if data is not None:
+            data_copy = data.copy()
+            if 'image' in data_copy:
+                data_copy['image'] = 'removed'
+            payload_copy = json.dumps(data_copy)
+            click.echo(f'Payload {payload_copy}')
+        else:
+            click.echo('No payload')
 
     if opts.dryrun:
         return

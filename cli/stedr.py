@@ -7,6 +7,10 @@ def set_watermark(stedr, f, pos, mode, opts: options.Options):
     post(f'stedr/{stedr}/watermark', None, data, opts)
 
 
+def set_heartbeat(stedr, hours, type, id, opts: options.Options):
+    post(f'stedr/{stedr}/heartbeat', {"hours": hours, "type": type, "id": id}, {}, opts)
+
+
 def run_cron(stedr, count, backfill, opts: options.Options):
     post(f'cron/{stedr}/source', {"count": count, "backfill": backfill}, {}, opts)
 

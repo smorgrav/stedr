@@ -18,16 +18,17 @@ def get(restpath, target_file, params, opts: options.Options):
         click.echo(f'Header: {headers}')
         click.echo(f'Params: {params}')
 
-    response = requests.get(url, headers=headers, params=params)
+    if not opts.dryrun:
+        response = requests.get(url, headers=headers, params=params)
 
-    if opts.verbose > 0:
-        click.echo(response.headers)
+        if opts.verbose > 0:
+            click.echo(response.headers)
 
-    if target_file:
-        with open(target_file, 'wb') as fd:
-            fd.write(response.content)
-    else:
-        click.echo(response.content)
+        if target_file:
+            with open(target_file, 'wb') as fd:
+                fd.write(response.content)
+        else:
+            click.echo(response.content)
 
 
 def get_file(restpath, params, save_file_path, opts: options.Options):

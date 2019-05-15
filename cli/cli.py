@@ -1,7 +1,8 @@
 import click
 import options
-from snap import image_upload, image_download, image_list, image_upload_from_source, image_predict
-from stedr import set_watermark, run_cron, add_integration
+import datetime
+from snap import image_upload, image_download, image_list, image_upload_from_source, image_predict, image_reprocess
+from stedr import set_watermark, run_cron, add_integration, set_heartbeat, add_rule
 from timelapse import remakemonth, remakeyear, remakeimage
 from common import post, get
 
@@ -69,6 +70,10 @@ def snap_from_source(stedr, backfill, count):
 @click.option('--progress', type=click.Path(file_okay=True, dir_okay=False),
               help="Progress file to support graceful retries")
 def snap_upload(path, stedr, reprocess, backfill, date, progress):
+    """Upload snaps from your machine
+
+       This is an alternative way to bootstrap or enrich the set of snaps.
+    """
     image_upload(stedr, path, reprocess, backfill, date, progress, opts)
 
 
@@ -84,10 +89,26 @@ def snap_download(stedr, imageid, progress, imagelist, savedir):
 
 @snap.command('list')
 @click.option('--stedr', required=True, help="The id of the stedr")
-@click.option('--imagelist', type=click.Path(file_okay=True, dir_okay=False), required=False,
+@click.option('--file', type=click.Path(file_okay=True, dir_okay=False), required=False,
               help="Save the list to this file")
-def snap_list(stedr, imagelist):
-    image_list(stedr, imagelist, opts)
+@click.option('--verbose/--no-verbose', required=False, help="More columns in output (if not json)")
+@click.option('--json/--no-json', required=False, help="List raw json data")
+@click.option('--from', 'fromdate', required=False, type=click.DateTime(),
+              default=datetime.date(2016, 1, 1),
+              help="List snaps not older than this (defaults to 2016)")
+@click.option('--to', 'todate', required=False, type=click.DateTime(),
+              default=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+              help="List snaps not newer than this (defaults to now)")
+def snap_list(stedr, file, verbose, json, fromdate, todate):
+    """List all snaps available for a given Stedr.
+
+       Often used to create a filelist for other commands (like download)
+    """
+
+    fromunix = int(fromdate.timestamp())
+    tounix = int(todate.timestamp())
+
+    image_list(stedr, file, fromunix, tounix, verbose, json, opts)
 
 
 @snap.command('predict')
@@ -96,6 +117,15 @@ def snap_list(stedr, imagelist):
 def snap_predict(stedr, snap):
     """Get predictions from machine learning on this snap"""
     image_predict(stedr, snap, opts)
+
+
+@snap.command('reprocess')
+@click.option('--stedr', required=True, help='The id of the stedr')
+@click.option('--snap', required=False, help='The id of the image')
+@click.option('--file', type=click.Path(file_okay=True, dir_okay=False), required=False)
+@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False))
+def snap_reprocess(stedr, snap, file, progress):
+    image_reprocess(stedr, snap, file, progress, opts)
 
 
 #
@@ -157,6 +187,22 @@ def stedr_add_integration(stedr, name, type):
     add_integration(stedr, name, type, opts)
 
 
+@stedrgroup.command('set-heartbeat')
+@click.option('--stedr', required=True, help="The id of stedr")
+@click.option('--id', required=True, help="Your name for the integration")
+@click.option('--type', required=True, type=click.Choice(['regobs', 'email']), help="One of the supported integrations")
+@click.option('--hours', required=True, type=click.Choice(['regobs', 'email']),
+              help="One of the supported integrations")
+def stedr_set_heartbeat(stedr, name, type):
+    set_heartbeat(stedr, name, type, opts)
+
+
+@stedrgroup.command('add-rule')
+@click.option('--stedr', required=True, help="The id of stedr")
+def stedr_add_rule(stedr):
+    add_rule(stedr, opts)
+
+
 @cli.group('timelapse')
 def timelapse():
     pass
@@ -207,8 +253,9 @@ def cron_source(stedr, count, backfill):
     run_cron(stedr, count, backfill, opts)
 
 
-@cron.command('teapot', help="The http variant of hello world - basically to check that the service is up")
+@cli.command('teapot', help="Check that we can communicate with the kettle")
 def teapot():
+    """A test command  - to verify communication with the kettle"""
     get('teapot', None, None, opts)
 
 

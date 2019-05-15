@@ -17,3 +17,7 @@ def run_cron(stedr, count, backfill, opts: options.Options):
 
 def add_integration(stedr, name, type, opts: options.Options):
     post(f'stedr/{stedr}/integration', {}, {"name": name, "type": type}, opts)
+
+
+def add_rule(stedr, opts: options.Options):
+    post(f'stedr/{stedr}/rule', {}, {}, opts)

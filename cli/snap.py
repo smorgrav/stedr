@@ -10,12 +10,64 @@ from os import listdir
 from os.path import isfile, isdir, join
 
 
-def image_list(stedr, imagelist, opts):
-    get(f'snap/{stedr}/list', imagelist, None, opts)
+def image_list(stedr, imagelist, fromunix, tounix, verbose, asjson, opts):
+    params = {}
+
+    if asjson:
+        params["asjson"] = True
+
+    if verbose:
+        params["verbose"] = True
+
+    if fromunix:
+        params["from"] = fromunix
+
+    if tounix:
+        params["to"] = tounix
+
+    get(f'snap/{stedr}/list', imagelist, params, opts)
 
 
 def image_predict(stedr, snap, opts):
-    post(f'snap/{stedr}/{snap}/ml', None, None, opts);
+    post(f'snap/{stedr}/{snap}/ml', None, None, opts)
+
+
+def image_reprocess(stedr, imageid, imagelist, progress, opts):
+    success = 0
+    failures = 0
+
+    if imageid is not None:
+        try:
+            post(f'snap/{stedr}/{imageid}/reprocess', None, None, opts)
+        except:
+            click.echo("Unable reprocess snap with id: " + imageid)
+
+    else:
+        if imagelist is None:
+            click.echo("You must specify either snap id or a file")
+            return False
+        if not isfile(imagelist):
+            click.echo("file must be a regular file with ids separated by newline")
+        if not progress:
+            progress = imagelist + ".progress"
+        with open(imagelist) as f:
+            all_lines = [fileline.split(",")[0] for fileline in f.readlines()]
+            if all_lines[0] == 'id':  # Remove header if this is a csv file
+                all_lines.pop(0)
+            with click.progressbar(all_lines, label='Reprocess images') as allIds:
+                for imgid in allIds:
+                    if not progress_already_contains_item(progress, imgid):
+                        try:
+                            post(f'snap/{stedr}/{imgid}/reprocess', None, None, opts)
+                            update_progress_file(progress, imgid, True)
+                            success += 1
+                        except:
+                            update_progress_file(progress, imgid, False)
+                            failures += 1
+
+    click.echo(f'Successfully reprocessed {success} images')
+    if failures > 0:
+        click.echo(f'Failed reprocessing {failures} images - see {progress} for details')
 
 
 def image_upload_from_source(stedr, backfill, count, opts):
@@ -44,7 +96,9 @@ def image_download(stedr, imageid, progress, imagelist, savedir, opts: options.O
         if not progress:
             progress = imagelist + ".progress"
         with open(imagelist) as f:
-            all_lines = f.readlines();
+            all_lines = [fileline.split(",")[0] for fileline in f.readlines()]
+            if all_lines[0] == 'id':  # Remove header if this is a csv file
+                all_lines.pop(0)
             with click.progressbar(all_lines, label='Downloading images') as allIds:
                 for imgid in allIds:
                     if not progress_already_contains_item(progress, imgid):

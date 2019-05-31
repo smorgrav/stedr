@@ -2,7 +2,7 @@ import click
 import options
 import datetime
 from snap import image_upload, image_download, image_list, image_upload_from_source, image_predict, image_reprocess
-from stedr import set_watermark, run_cron, add_integration, set_heartbeat, add_rule
+from stedr import set_watermark, run_cronfull, run_cronrules, run_cronsource, add_integration, set_heartbeat, add_rule
 from timelapse import remakemonth, remakeyear, remakeimage
 from common import post, get
 
@@ -94,7 +94,7 @@ def snap_download(stedr, imageid, progress, imagelist, savedir):
 @click.option('--verbose/--no-verbose', required=False, help="More columns in output (if not json)")
 @click.option('--json/--no-json', required=False, help="List raw json data")
 @click.option('--from', 'fromdate', required=False, type=click.DateTime(),
-              default=datetime.date(2016, 1, 1),
+              default=datetime.date(2016, 1, 1).strftime("%Y-%m-%d %H:%M:%S"),
               help="List snaps not older than this (defaults to 2016)")
 @click.option('--to', 'todate', required=False, type=click.DateTime(),
               default=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -179,22 +179,24 @@ def stedr_set_watermark(stedr, file, pos, mode):
     set_watermark(stedr, file, pos, mode, opts)
 
 
+@stedrgroup.command('set-heartbeat')
+@click.option('--stedr', required=True, help="The id of stedr")
+@click.option('--id', required=True, help="The id for the integration (ie the integration config")
+@click.option('--type', required=True, type=click.Choice(['regobs', 'email', 'logger', 'opsgenie']),
+              help="One of the supported integrations")
+@click.option('--hour', default=36, type=click.IntRange(1, 720),
+              help="How long between two snaps before we trigger an action in hours (defaults to 36)")
+def stedr_set_heartbeat(stedr, id, type, hour):
+    set_heartbeat(stedr, hour, type, id, opts)
+
+
 @stedrgroup.command('add-integration')
 @click.option('--stedr', required=True, help="The id of stedr")
 @click.option('--name', required=True, help="Your name for the integration")
-@click.option('--type', required=True, type=click.Choice(['regobs', 'email']), help="One of the supported integrations")
-def stedr_add_integration(stedr, name, type):
-    add_integration(stedr, name, type, opts)
-
-
-@stedrgroup.command('set-heartbeat')
-@click.option('--stedr', required=True, help="The id of stedr")
-@click.option('--id', required=True, help="Your name for the integration")
-@click.option('--type', required=True, type=click.Choice(['regobs', 'email']), help="One of the supported integrations")
-@click.option('--hours', required=True, type=click.Choice(['regobs', 'email']),
-              help="One of the supported integrations")
-def stedr_set_heartbeat(stedr, name, type):
-    set_heartbeat(stedr, name, type, opts)
+@click.option('--type', required=True, type=click.Choice(['regobs', 'email', 'opsgenie']), help="One of the supported integrations")
+@click.option('--params', '-p', multiple=True, required=False, help="mulitple pairs of key=value. eg. -p apikey=dsds -p message={STEDR_ID}")
+def stedr_add_integration(stedr, name, type, params):
+    add_integration(stedr, name, type, params, opts)
 
 
 @stedrgroup.command('add-rule')
@@ -245,12 +247,24 @@ def cron():
     pass
 
 
+@cron.command('full')
+@click.option('--stedr', required=False, help="The id of stedr")
+def cron_full(stedr):
+    run_cronfull(stedr, opts)
+
+
+@cron.command('rules')
+@click.option('--stedr', required=False, help="The id of stedr")
+def cron_rules(stedr):
+    run_cronrules(stedr, opts)
+
+
 @cron.command('source')
 @click.option('--stedr', required=True, help="The id of stedr")
 @click.option('--count', required=False, default=1, help="Number of files to import from url")
 @click.option('--backfill/--no-backfill', required=False, default=False, help="Allow import of older images")
 def cron_source(stedr, count, backfill):
-    run_cron(stedr, count, backfill, opts)
+    run_cronsource(stedr, count, backfill, opts)
 
 
 @cli.command('teapot', help="Check that we can communicate with the kettle")

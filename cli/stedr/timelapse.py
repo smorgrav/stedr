@@ -1,5 +1,5 @@
-from common import post
-import options
+from stedr.common import post
+from stedr import options
 
 
 def remakemonth(stedr, year, month, opts: options.Options):

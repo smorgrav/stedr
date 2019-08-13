@@ -1,10 +1,12 @@
 import click
-import options
 import datetime
-from snap import image_upload, image_download, image_list, image_upload_from_source, image_predict, image_reprocess
-from stedr import set_watermark, run_cronfull, run_cronrules, run_cronsource, add_integration, set_heartbeat, add_rule
-from timelapse import remakemonth, remakeyear, remakeimage
-from common import post, get
+from stedr.snap import image_upload, image_download, image_list, image_upload_from_source, image_predict, \
+    image_reprocess
+from stedr.stedr import set_watermark, run_cronfull, run_cronrules, run_cronsource, add_integration, set_heartbeat, \
+    add_rule
+from stedr.timelapse import remakemonth, remakeyear, remakeimage
+from stedr.common import post, get
+from stedr import options
 
 # To enable -h abbrivation of help option
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -122,9 +124,11 @@ def snap_predict(stedr, snap):
 @snap.command('reprocess')
 @click.option('--stedr', required=True, help='The id of the stedr')
 @click.option('--snap', required=False, help='The id of the image')
-@click.option('--file', type=click.Path(file_okay=True, dir_okay=False), required=False)
-@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False))
+@click.option('--snaps', type=click.Path(file_okay=True, dir_okay=False), required=False,
+              help='File with list of ids, line separated')
+@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False), help="Enable gracefull retries")
 def snap_reprocess(stedr, snap, file, progress):
+    """Take snapid through the initial import pipeline again"""
     image_reprocess(stedr, snap, file, progress, opts)
 
 
@@ -193,8 +197,10 @@ def stedr_set_heartbeat(stedr, id, type, hour):
 @stedrgroup.command('add-integration')
 @click.option('--stedr', required=True, help="The id of stedr")
 @click.option('--name', required=True, help="Your name for the integration")
-@click.option('--type', required=True, type=click.Choice(['regobs', 'email', 'opsgenie']), help="One of the supported integrations")
-@click.option('--params', '-p', multiple=True, required=False, help="mulitple pairs of key=value. eg. -p apikey=dsds -p message={STEDR_ID}")
+@click.option('--type', required=True, type=click.Choice(['regobs', 'email', 'opsgenie']),
+              help="One of the supported integrations")
+@click.option('--params', '-p', multiple=True, required=False,
+              help="mulitple pairs of key=value. eg. -p apikey=dsds -p message={STEDR_ID}")
 def stedr_add_integration(stedr, name, type, params):
     add_integration(stedr, name, type, params, opts)
 
@@ -318,3 +324,7 @@ def manual_model(modelid, projectid, model, version):
 @click.option('--modelid', required=True, help="The model id")
 def export_supervised(modelid, file):
     get(f'ml/model/{modelid}/csv2', file, None, opts)
+
+
+if __name__ == '__main__':
+    cli()

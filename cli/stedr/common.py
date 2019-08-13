@@ -4,7 +4,7 @@ import sys
 
 import click
 import requests
-import options
+from stedr import options
 from io import open
 import os
 

@@ -1,17 +1,16 @@
 import subprocess
 import re
-import sys
-import signal
-from common import post, encode, get_file, get
+from stedr.common import post, encode, get_file, get
 from io import open
 from pathlib import Path
 import click
-import options
+from stedr import options
 from datetime import datetime
 from os import listdir
 from os.path import isfile, isdir, join
 
-aborted = False;
+aborted = False
+
 
 def image_list(stedr, imagelist, fromunix, tounix, verbose, asjson, opts):
     params = {}

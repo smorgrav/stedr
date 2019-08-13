@@ -1,5 +1,5 @@
-from common import post, encode
-import options
+from stedr.common import post, encode
+from stedr import options
 
 
 def set_watermark(stedr, f, pos, mode, opts: options.Options):

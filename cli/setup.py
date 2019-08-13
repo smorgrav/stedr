@@ -1,17 +1,18 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='stedr',
     version=0.1,
-    py_modules=['cli'],
+    packages=find_packages(),
     install_requires=[
         'Click',
         'requests',
         'configparser',
-        'pathlib'
+        'pathlib',
+        'options'
     ],
     entry_points='''
         [console_scripts]
-        stedr=cli:cli
+        stedr=stedr:cli.cli
     '''
 )

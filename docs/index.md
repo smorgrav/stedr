@@ -6,21 +6,20 @@ Stedr lets you interact with it via the browser, native apps, command line and t
 This site will document usage of each of these tools, starting with the command line interface (CLI).
 
 # Terminology
-stedr == camera (for the most part)
-snap == An image with meta information (usually)
+stedr == the location a camera (for the most part) or sensors are located
+snap == A snapshot from a stedr, usually an image
 
-In addition to being the name of the service, 'stedr' is the name of the location where we gather information. This is
-usually a camera that takes images, but could be an arbitrary set of sensors. A snap is a snapshot of the information
-gathered from one stedr (which again - is usaully an image, but could all sorts of things).
+In addition to being the name of the service, 'stedr' is the name of the location where we gather information. This is usually a camera that takes images, but could be an arbitrary set of sensors. A snap is a snapshot of the information gathered from one stedr (which again - is usaully an image, but could all sorts of things).
 
 # CLI
 
 The commmand line tool is called 'stedr' and helps you among other things to bulk upload and download images.
 
 ## Installation
+Prerequisite is to have Python 3 installed (version >= 3.6.5). 
 
 ```bash
-pip install -e 'git+https://github.com/smorgrav/stedr#egg=stedr&subdirectory=cli'
+pip3 install -e 'git+https://github.com/smorgrav/stedr#egg=stedr&subdirectory=cli'
 ```
 
 Requires python 3.6.5 or newer. If you don't have that or want to isolate the installation you can 

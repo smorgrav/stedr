@@ -1,8 +1,8 @@
 import click
 import datetime
 from stedr.snap import image_upload, image_download, image_list, image_upload_from_source, image_predict, \
-    image_reprocess
-from stedr.stedr import set_watermark, run_cronfull, run_cronrules, run_cronsource, add_integration, set_heartbeat, \
+    image_reprocess, image_reeval
+from stedr.steder import set_watermark, run_cronfull, run_cronrules, run_cronsource, add_integration, set_heartbeat, \
     add_rule
 from stedr.timelapse import remakemonth, remakeyear, remakeimage
 from stedr.common import post, get
@@ -13,7 +13,6 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 # Global attributes
 opts = options.Options()
-
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('-v', '--verbose', count=True, help='Print out more for each command')
@@ -68,7 +67,7 @@ def snap_from_source(stedr, backfill, count):
 @click.option('--reprocess/--no-reprocess', default=False, help="Reprocess previous image was identical")
 @click.option('--backfill/--no-backfill', default=False, help="Allow older images than already imported")
 @click.option('--stedr', required=True, help="The id of the stedr")
-@click.option('--date', required=False, default="exif", help="exif, now or explicit. Defaults to exif")
+@click.option('--date', required=False, default="now", help="exif, now or explicit. Defaults to exif")
 @click.option('--progress', type=click.Path(file_okay=True, dir_okay=False),
               help="Progress file to support graceful retries")
 def snap_upload(path, stedr, reprocess, backfill, date, progress):
@@ -131,6 +130,16 @@ def snap_reprocess(stedr, snap, file, progress):
     """Take snapid through the initial import pipeline again"""
     image_reprocess(stedr, snap, file, progress, opts)
 
+
+@snap.command('eval')
+@click.option('--stedr', required=True, help='The id of the stedr')
+@click.option('--snap', required=False, help='The id of the image')
+@click.option('--snaps', type=click.Path(file_okay=True, dir_okay=False), required=False,
+              help='File with list of ids, line separated')
+@click.option('--progress', type=click.Path(file_okay=True, dir_okay=False), help="Enable gracefull retries")
+def snap_reeval(stedr, snap, snaps, progress):
+    """Take snapid through the initial import pipeline again"""
+    image_reeval(stedr, snap, snaps, progress, opts)
 
 #
 # Config groups - set uid, key and endpoint for the cli

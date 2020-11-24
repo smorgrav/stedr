@@ -72,6 +72,43 @@ def image_reprocess(stedr, imageid, imagelist, progress, opts):
         click.echo(f'Failed reprocessing {failures} images - see {progress} for details')
 
 
+def image_reeval(stedr, imageid, imagelist, progress, opts):
+    success = 0
+    failures = 0
+
+    if imageid is not None:
+        try:
+            post(f'snap/{stedr}/{imageid}/eval', None, None, opts)
+        except:
+            click.echo("Unable re-evaluate snap with id: " + imageid)
+
+    else:
+        if imagelist is None:
+            click.echo("You must specify either snap id or a file")
+            return False
+        if not isfile(imagelist):
+            click.echo("file must be a regular file with ids separated by newline")
+        if not progress:
+            progress = imagelist + ".progress"
+        with open(imagelist) as f:
+            all_lines = [fileline.split(",")[0].strip() for fileline in f.readlines()]
+            if all_lines[0] == 'id':  # Remove header if this is a csv file
+                all_lines.pop(0)
+            with click.progressbar(all_lines, label='Reprocess images') as allIds:
+                for imgid in allIds:
+                    if not progress_already_contains_item(progress, imgid):
+                        try:
+                            post(f'snap/{stedr}/{imgid}/eval', None, None, opts)
+                            update_progress_file(progress, imgid, True)
+                            success += 1
+                        except:
+                            update_progress_file(progress, imgid, False)
+                            failures += 1
+
+    click.echo(f'Successfully re-evaluated {success} images')
+    if failures > 0:
+        click.echo(f'Failed re-evaluating {failures} images - see {progress} for details')
+
 def image_upload_from_source(stedr, backfill, count, opts):
     params = {"count": count}
     if backfill:
@@ -137,7 +174,7 @@ def image_upload(stedr, path, reprocess, backfill, date, progress, opts: options
                 if not progress_already_contains_item(progress, f):
                     try:
                         fullfile = join(path, f)
-                        populate_from_exif(fullfile, data)
+                        #populate_from_exif(fullfile, data)
                         adjustdate(data, date)
                         data['image'] = encode(fullfile)
                         post(f'snap/{stedr}', params, data, opts)
@@ -149,13 +186,14 @@ def image_upload(stedr, path, reprocess, backfill, date, progress, opts: options
             click.echo('Uploading image %s' % path)
         if not progress_already_contains_item(progress, path):
             try:
-                populate_from_exif(path, data)
+                #populate_from_exif(path, data)
                 adjustdate(data, date)
                 data['image'] = encode(path)
                 post(f'snap/{stedr}', params, data, opts)
                 update_progress_file(progress, path, True)
-            except:
-                update_progress_file(progress, f, False)
+            except Exception as e:
+                click.echo('Error' % e)
+                update_progress_file(progress, path, False)
 
 
 def progress_already_contains_item(progress_file, file):
